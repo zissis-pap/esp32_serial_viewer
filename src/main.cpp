@@ -4,7 +4,8 @@
 #include <Wire.h> 
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
-#include "BluetoothSerial.h"
+#include <BluetoothSerial.h>
+#include "main.h"
 #include "logo.h"
 #include "defines.h"
 
@@ -29,9 +30,14 @@ void setup(void)
     Serial.println(F("SSD1306 allocation failed"));
     while(1); // Don't proceed, loop forever
   }
-  display.display();     // the library initializes this with an Adafruit splash screen.
-  Serial.println(F("OK"));
-
+  // Clear display
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0, 0);  // Set the cursor to the top-left corner of the display
+  // print OK
+  display_ok();
+  
   // Initialize LoRa
   SPI.begin(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_CS);
   LoRa.setPins(LORA_CS, LORA_RST, LORA_IRQ);
@@ -40,23 +46,21 @@ void setup(void)
     Serial.println(F("Starting LoRa failed!"));
     while (1);
   }
-  Serial.println(F("OK"));
+  display_ok();
 
   // Initialize Bluetooth
   SerialBT.begin("ESP32 Portable UART Reader"); //Bluetooth device name
 
+  // Initialize SD card
+
   // Initialize LED
   pinMode(LED_BUILTIN, OUTPUT);
-  Serial.println(F("OK"));
+  display_ok();
   Serial.printf("SYSTEM OK\n");
   digitalWrite(LED_BUILTIN, LOW); // while OLED is running, must set GPIO25 in high
-
-  // Clear display
   display.clearDisplay();
-  display.display();
-  display.setTextSize(1);
-  display.setTextColor(SSD1306_WHITE);
   display.setCursor(0, 0);  // Set the cursor to the top-left corner of the display
+  display.display();  
 }
 
 
@@ -78,7 +82,7 @@ void loop(void)
     }
     if(lines == 0) lines = 1;
     
-    if (display.getCursorY() >= SCREEN_HEIGHT - lines*LINE) 
+    if (display.getCursorY() >= SCREEN_HEIGHT - lines*LINE + 1) 
     {
       for (int y = 0; y < 64; y++) 
       {
@@ -98,4 +102,11 @@ void loop(void)
 
     digitalWrite(LED_BUILTIN, LOW); // while OLED is running, must set GPIO25 in high
   }
+}
+
+void display_ok(void)
+{
+  display.println("OK");
+  display.display();
+  Serial.println(F("OK"));
 }
