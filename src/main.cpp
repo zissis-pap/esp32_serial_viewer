@@ -5,6 +5,7 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <BluetoothSerial.h>
+#include <SD.h>
 #include "main.h"
 #include "logo.h"
 #include "defines.h"
@@ -12,6 +13,8 @@
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RST);
 
 BluetoothSerial SerialBT;
+
+SPIClass sd_spi(HSPI);
 
 String IncominData = "";
 int cursor = 0;
@@ -28,6 +31,7 @@ void setup(void)
   if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3c, false, false)) 
   { // Address 0x3C for 128x32
     Serial.println(F("SSD1306 allocation failed"));
+    display_fail();
     while(1); // Don't proceed, loop forever
   }
   // Clear display
@@ -44,6 +48,7 @@ void setup(void)
   if (!LoRa.begin(LORA_BAND)) 
   {
     Serial.println(F("Starting LoRa failed!"));
+    display_fail();
     while (1);
   }
   display_ok();
@@ -52,11 +57,22 @@ void setup(void)
   SerialBT.begin("ESP32 Portable UART Reader"); //Bluetooth device name
 
   // Initialize SD card
+  sd_spi.begin(SD_SCK, SD_MISO, SD_MOSI, SD_CS);
+  if (!SD.begin(SD_CS, sd_spi))
+  {
+    Serial.println(F("SD Card: mounting failed"));
+    display_fail();
+  }
+  else
+  { 
+    Serial.println(F("SD Card: mounted"));
+    display_ok();
+  }
 
   // Initialize LED
   pinMode(LED_BUILTIN, OUTPUT);
   display_ok();
-  Serial.printf("SYSTEM OK\n");
+  Serial.println(F("SYSTEM OK"));
   digitalWrite(LED_BUILTIN, LOW); // while OLED is running, must set GPIO25 in high
   display.clearDisplay();
   display.setCursor(0, 0);  // Set the cursor to the top-left corner of the display
@@ -109,4 +125,11 @@ void display_ok(void)
   display.println("OK");
   display.display();
   Serial.println(F("OK"));
+}
+
+void display_fail(void)
+{
+  display.println("ERROR");
+  display.display();
+  Serial.println(F("ERROR"));
 }
