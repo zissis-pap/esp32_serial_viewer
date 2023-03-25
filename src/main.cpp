@@ -17,9 +17,11 @@ BluetoothSerial SerialBT;
 SPIClass sd_spi(HSPI);
 
 String IncominData = "";
+int horizontal_chars = floor(SCREEN_WIDTH/6); // each char is about 6 pixels wide
 int cursor = 0;
-const int LINE = 8;
+const int LINE = 8;                           // each line is 8 pixels high
 const uint8_t end[1] = {10};
+
 
 void setup(void) 
 {
@@ -88,21 +90,21 @@ void loop(void)
     String data = Serial.readStringUntil('\n');
     int lines = 0;
     int data_len = data.length();
-    if(data_len % 21)
+    if(data_len % horizontal_chars)
     {
-      lines = (data_len / 21) + 1;
+      lines = (data_len / horizontal_chars) + 1;
     }
     else
     {
-      lines = data_len / 21;
+      lines = data_len / horizontal_chars;
     }
     if(lines == 0) lines = 1;
     
     if (display.getCursorY() >= SCREEN_HEIGHT - lines*LINE + 1) 
     {
-      for (int y = 0; y < 64; y++) 
+      for (int y = 0; y < SCREEN_HEIGHT; y++) 
       {
-        for (int x = 0; x < 128; x++) 
+        for (int x = 0; x < SCREEN_WIDTH; x++) 
         {
           display.drawPixel(x, y, display.getPixel(x, y + lines*LINE));
         }
