@@ -1,24 +1,32 @@
 # -*- coding: utf-8 -*-
 """
-Spyder Editor
-
-This is a temporary script file.
+Copyright: Zissis Papadopoulos
 """
 
 import serial
 import time
 import sys
 
+args = sys.argv[1:] # get arguments
+path = "" # path of file to be sent
+
 # configure the serial port
 ser = serial.Serial()
 ser.baudrate = 115200
-ser.port = '/dev/ttyUSB0'  # replace with your serial port name (e.g. '/dev/ttyUSB0' on Linux)
+
+if len(args) < 1:
+    print("Please enter a valid file path")
+    sys.exit(1)
+path = args[0]
+ser.port = args[1] if len(args) > 1 else '/dev/ttyUSB0' # replace with your serial port name (e.g. '/dev/ttyUSB0' on Linux)
+delay = float(args[2]) if len(args) > 2 else 0.01  # delay for each line
+print("Sending file " + path + " to " + ser.port + " at ", 1/delay, " lines per second.")
+
 ser.open()
 counter = 0
-delay = 0.002
 # send data to the serial port
 #ser.write(b'Hello, world!')  # send a byte string
-with open('/home/zissis/Desktop/bible.txt', 'r') as f:
+with open(path, 'r') as f:
     # Read the file character by character
     for char in f.read():
         if(char == '\n'):
