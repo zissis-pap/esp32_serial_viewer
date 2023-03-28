@@ -10,18 +10,17 @@
 #include "logo.h"
 #include "defines.h"
 
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RST);
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RST); // Initialize SSD1306 display
 
-BluetoothSerial SerialBT;
+BluetoothSerial SerialBT; // Initialize bluetooth
 
-SPIClass sd_spi(HSPI);
+SPIClass sd_spi(HSPI);  // Initialize SPI for SD card
 
 String IncominData = "";
 int horizontal_chars = floor(SCREEN_WIDTH/6); // each char is about 6 pixels wide
 int cursor = 0;
 const int LINE = 8;                           // each line is 8 pixels high
 const uint8_t end[1] = {10};
-
 
 void setup(void) 
 {

@@ -1,3 +1,14 @@
+/**
+  ******************************************************************************
+  * @file           : defines.h
+  * @brief          : This file contains the common defines of the application.
+  ******************************************************************************
+  * @attention
+  * */
+
+#ifndef __DEFINES_H
+#define __DEFINES_H
+
 /* LoRa Parameters */
 #define LORA_BAND    868E6
 
@@ -10,3 +21,5 @@
 #define SD_SCK 14
 #define SD_MOSI 15
 #define SD_MISO 2
+
+#endif
