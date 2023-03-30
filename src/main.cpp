@@ -10,6 +10,7 @@
 #include "defines.h"
 #include "enumerations.h"
 #include "init_variables.h"
+#include "dialogs.h"
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RST); // Initialize SSD1306 display
 BluetoothSerial SerialBT;                                               // Initialize bluetooth
@@ -49,6 +50,14 @@ void setup(void)
 
 void loop(void) 
 {
+  // while(1)
+  // {
+  //   if(SerialBT.connected())
+  //   {
+  //     SerialBT.write(bluetooth_greeting, sizeof(bluetooth_greeting)/sizeof(uint8_t));
+  //     delay(3000);
+  //   }
+  // }
   if (Serial.available()) 
   {
     digitalWrite(LED_BUILTIN, HIGH); // while OLED is running, must set GPIO25 in high
@@ -85,6 +94,17 @@ void loop(void)
 
     digitalWrite(LED_BUILTIN, LOW); // while OLED is running, must set GPIO25 in high
   }
+}
+
+/* MAIN FLOW FUNCTIONS */
+void ErrorHandler(void)
+{
+
+}
+
+void StateExecution(void)
+{
+
 }
 
 /* SETUP FUNCTIONS */
@@ -163,15 +183,50 @@ void SDSetup(void)
 }
 
 /* BLUETOOTH FUNCTIONS */
-void BluetoothReceive(void)
+char* BluetoothReceive(void)
 {
-  uint8_t i = 0;
-  char data[64] = "";
+  uint8_t index = 0;
+  char c;
+  static char buffer[64];
   while(SerialBT.available()) 
   {
-    data[i] = SerialBT.read();
-    i++;
+    c = SerialBT.read();
+    if(c == '\n')
+    {
+      buffer[index] = '\0';
+      return buffer;
+    }
+    buffer[index] = c;
+    index++;
+    delay(1); // wait for whatever reason
   }
+  return NULL;
+}
+
+/* COMMAND FUNCTIONS */
+char* CheckForCommand(void)
+{
+  static char* data = BluetoothReceive();
+  if(data != NULL)
+  {
+    if(strncmp(data, "esp", 3) == 0)
+    {
+      if(strncmp(&data[4], "set", 3) == 0)
+      {
+
+      }
+      else if(strncmp(&data[4], "exe", 3) == 0)
+      {
+
+      }
+      else if(strncmp(&data[4], "get", 3) == 0)
+      {
+
+      }
+
+    }
+  }
+  return NULL;
 }
 
 /* ERROR FUNCTIONS */

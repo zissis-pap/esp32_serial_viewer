@@ -16,8 +16,15 @@ typedef uint16_t SYS_STATUS;	/* Stores the current system error
 typedef uint8_t SYS_STATE;		/* Stores the current system state - What routine should the device run */
 /* Functions */
 
+// Main flow functions
+void ErrorHandler(void);
+void StateExecution(void);
+
 // Bluetooth functions
-void BluetoothReceive(void);
+char* BluetoothReceive(void);
+
+// Command functions
+char* CheckForCommand(void);
 
 // Error functions
 void PrintSystemStatus(void);
