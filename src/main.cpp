@@ -47,7 +47,6 @@ void setup(void)
   display.display();  
 }
 
-
 void loop(void) 
 {
   if (Serial.available()) 
@@ -163,6 +162,18 @@ void SDSetup(void)
   }
 }
 
+/* BLUETOOTH FUNCTIONS */
+void BluetoothReceive(void)
+{
+  uint8_t i = 0;
+  char data[64] = "";
+  while(SerialBT.available()) 
+  {
+    data[i] = SerialBT.read();
+    i++;
+  }
+}
+
 /* ERROR FUNCTIONS */
 /**
   * @brief  Prints the SYSTEM_STATUS variable
@@ -226,6 +237,9 @@ void ClearErrorID(uint16_t error)
 {
 	SYSTEM_STATUS &= ~error;
 }
+
+/* COMMAND FUNCTIONS */
+
 
 /* MISC FUNCTIONS */
 void display_ok(void)
