@@ -21,5 +21,6 @@
 
 /* SYSTEM STATE enumerations */
 enum {SYSTEM_RESET = 0};
+enum {FALSE = 0, TRUE = 1};
 
 #endif
