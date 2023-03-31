@@ -19,6 +19,9 @@ typedef uint8_t SYS_STATE;		/* Stores the current system state - What routine sh
 // Main flow functions
 void ErrorHandler(void);
 void StateExecution(void);
+void SystemPowerUp(void);
+void WaitBLEClientConnection(void);
+char* BLEClientConnected(void);
 
 // Bluetooth functions
 char* BluetoothReceive(void);
@@ -39,6 +42,9 @@ void OLEDSetUp(void);
 void BluetoothSetUP(void);
 void LoRaSetUp(void);
 void SDSetup(void);
+
+// OLED functions
+void OLEDDisplayStatus(String data);
 
 // Misc
 void display_ok(void);

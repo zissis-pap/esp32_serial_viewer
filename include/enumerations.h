@@ -20,7 +20,8 @@
 #define NO_BLUETOOTH_CONN   1UL << 7
 
 /* SYSTEM STATE enumerations */
-enum {SYSTEM_RESET = 0};
+enum {SYSTEM_RESET = 0, AWAIT_BLE_CLIENT = 1, BLE_CLIENT_CONNECTED = 2, COMMAND = 3};
 enum {FALSE = 0, TRUE = 1};
+
 
 #endif

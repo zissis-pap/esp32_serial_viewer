@@ -50,14 +50,11 @@ void setup(void)
 
 void loop(void) 
 {
-  // while(1)
-  // {
-  //   if(SerialBT.connected())
-  //   {
-  //     SerialBT.write(bluetooth_greeting, sizeof(bluetooth_greeting)/sizeof(uint8_t));
-  //     delay(3000);
-  //   }
-  // }
+  while(1)
+  {
+    StateExecution();
+  }
+
   if (Serial.available()) 
   {
     digitalWrite(LED_BUILTIN, HIGH); // while OLED is running, must set GPIO25 in high
@@ -104,7 +101,65 @@ void ErrorHandler(void)
 
 void StateExecution(void)
 {
+  char* sys_control;
+  switch(SYSTEM_STATE)
+  {
+    case SYSTEM_RESET:
+      SystemPowerUp();
+      break;
+    case AWAIT_BLE_CLIENT:
+      WaitBLEClientConnection();
+      break;
+    case BLE_CLIENT_CONNECTED:
+      BLEClientConnected();
+      break;
+    case COMMAND:
+      break;
+    default:
+      break;
+  }
+}
 
+void SystemPowerUp(void)
+{
+  OLEDDisplayStatus("SYSTEM BOOT");
+  SYSTEM_STATE = AWAIT_BLE_CLIENT;
+}
+
+void WaitBLEClientConnection(void)
+{
+  OLEDDisplayStatus("WAIT FOR BLE CLIENT");
+  while(!SerialBT.connected())
+  {
+    SYSTEM_STATE = BLE_CLIENT_CONNECTED;
+  }
+}
+
+char* BLEClientConnected(void)
+{
+  char* command;
+  static uint8_t greeting_displayed = FALSE;
+  if(greeting_displayed == FALSE) 
+  {
+    OLEDDisplayStatus("BLE CLIENT CONNECTED");
+    SerialBT.write(bluetooth_greeting, sizeof(bluetooth_greeting)/sizeof(uint8_t));
+    greeting_displayed = TRUE;
+  }
+  while(SerialBT.connected())
+  {
+    command = CheckForCommand();
+    if(command != NULL)
+    {
+      SYSTEM_STATE = COMMAND;
+      return command;
+    }
+  }
+  if(!SerialBT.connected())
+  {
+    greeting_displayed = FALSE;
+  }
+  SYSTEM_STATE = AWAIT_BLE_CLIENT;
+  return NULL;
 }
 
 /* SETUP FUNCTIONS */
@@ -203,32 +258,6 @@ char* BluetoothReceive(void)
   return NULL;
 }
 
-/* COMMAND FUNCTIONS */
-char* CheckForCommand(void)
-{
-  static char* data = BluetoothReceive();
-  if(data != NULL)
-  {
-    if(strncmp(data, "esp", 3) == 0)
-    {
-      if(strncmp(&data[4], "set", 3) == 0)
-      {
-
-      }
-      else if(strncmp(&data[4], "exe", 3) == 0)
-      {
-
-      }
-      else if(strncmp(&data[4], "get", 3) == 0)
-      {
-
-      }
-
-    }
-  }
-  return NULL;
-}
-
 /* ERROR FUNCTIONS */
 /**
   * @brief  Prints the SYSTEM_STATUS variable
@@ -294,7 +323,60 @@ void ClearErrorID(uint16_t error)
 }
 
 /* COMMAND FUNCTIONS */
+char* CheckForCommand(void)
+{
+  char* data = BluetoothReceive();
+  if(data != NULL)
+  {
+    if(strncmp(data, "esp", 3) == 0 && strlen(data) >= 8)
+    {
+      if(strncmp(&data[4], "set", 3) == 0)
+      {
 
+      }
+      else if(strncmp(&data[4], "exe", 3) == 0)
+      {
+        if(strncmp(&data[9], "read", 4) == 0)
+        {
+
+        }
+        else if(strncmp(&data[9], "stop", 4) == 0)
+        {
+
+        }
+      }
+      else if(strncmp(&data[4], "get", 3) == 0)
+      {
+
+      }
+      else if(strncmp(&data[4], "help", 4) == 0)  // OK
+      {
+        SerialBT.write(help_message, sizeof(help_message)/sizeof(uint8_t));
+      }
+
+    }
+  }
+  return NULL;
+}
+
+/* OLED functions */
+void OLEDDisplayStatus(String data)
+{
+  int  temp_cursorX = display.getCursorX();
+  int  temp_cursorY = display.getCursorY();
+  for(uint16_t i = 0; i < SCREEN_WIDTH; i++)
+  {
+    for(uint8_t k = 0; k < LINE_HEIGHT; k++)
+    {
+      display.drawPixel(i, k, SSD1306_BLACK);
+    }
+    display.drawPixel(i, LINE_HEIGHT, SSD1306_WHITE);
+  }
+  display.setCursor(0, 0);
+  display.print(data);
+  display.setCursor(temp_cursorX, temp_cursorY);
+  display.display();
+}
 
 /* MISC FUNCTIONS */
 void display_ok(void)
