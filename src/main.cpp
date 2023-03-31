@@ -6,6 +6,7 @@
 #include <Adafruit_SSD1306.h>
 #include <BluetoothSerial.h>
 #include <SD.h>
+#include <FS.h>
 #include "main.h"
 #include "defines.h"
 #include "enumerations.h"
@@ -342,10 +343,8 @@ char* CheckForCommand(void)
       if(strncmp(&data[4], "set", 3) == 0) {}
       else if(strncmp(&data[4], "exe", 3) == 0)
       {
-        if(strncmp(&data[8], "read", 4) == 0) 
-        {
-          data[0] = 48; // should return?
-        }
+        if(strncmp(&data[8], "read", 4) == 0) data[0] = READ_UART; 
+        if(strncmp(&data[8], "list", 4) == 0) data[0] = LIST_SD; 
         else if(strncmp(&data[9], "stop", 4) == 0) {}
       }
       else if(strncmp(&data[4], "get", 3) == 0) {}
@@ -370,6 +369,9 @@ void ExecuteCommand(char* command)
     {
       case READ_UART:
         ReadUART();
+        break;
+      case LIST_SD:
+        SDListDir();
         break;
       default:
         Serial.println("Default");
@@ -401,6 +403,48 @@ void OLEDDisplayStatus(String data)
   display.print(data);
   display.setCursor(0, 2*LINE_HEIGHT);
   display.display();
+}
+
+/* SD functions */
+void SDListDir(void)
+{
+  listDir(SD, "/", 0);
+
+}
+
+void listDir(fs::FS &fs, const char * dirname, uint8_t levels)
+{
+  char buffer[256] = "";
+  sprintf(buffer, "Listing directory: %s\n", dirname);
+  Serial.printf("Listing directory: %s\n", dirname);
+
+  File root = fs.open(dirname);
+  if(!root){
+    Serial.println("Failed to open directory");
+    return;
+  }
+  if(!root.isDirectory()){
+    Serial.println("Not a directory");
+    return;
+  }
+
+  File file = root.openNextFile();
+  while(file){
+    if(file.isDirectory()){
+      Serial.print("  DIR : ");
+      Serial.println(file.name());
+      if(levels){
+        listDir(fs, file.name(), levels -1);
+      }
+    } else {
+      Serial.print("  FILE: ");
+      Serial.print(file.name());
+      Serial.print("  SIZE: ");
+      Serial.println(file.size());
+    }
+    file = root.openNextFile();
+  }
+  SerialBT.write((uint8_t*)buffer, sizeof(buffer)/sizeof(char) - 1);
 }
 
 /* MISC FUNCTIONS */

@@ -48,6 +48,10 @@ void SDSetup(void);
 // OLED functions
 void OLEDDisplayStatus(String data);
 
+// SD functions
+void SDListDir(void);
+void listDir(fs::FS &fs, const char * dirname, uint8_t levels);
+
 // Misc
 void display_ok(void);
 void display_fail(void);

@@ -22,7 +22,7 @@
 /* SYSTEM STATE enumerations */
 enum {SYSTEM_RESET = 0, AWAIT_BLE_CLIENT = 1, BLE_CLIENT_CONNECTED = 2, COMMAND = 3};
 /* COMMANDS enumerations */
-enum {READ_UART = 48, SET_BAUD_RATE = 1, SAVE_TO_SD = 2};
+enum {READ_UART = 0, LIST_SD = 1, SET_BAUD_RATE = 2, SAVE_TO_SD = 3};
 /* MISC */
 enum {FALSE = 0, TRUE = 1};
 
