@@ -20,11 +20,6 @@ SPIClass sd_spi(HSPI);                                                  // Initi
 SYS_STATUS 		SYSTEM_STATUS = SYSTEM_OK;
 SYS_STATE  		SYSTEM_STATE  = SYSTEM_RESET;
 
-int horizontal_chars = floor(SCREEN_WIDTH/6);                           // each char is about 6 pixels wide
-int cursor = 0;
-
-const uint8_t end[1] = {10};
-
 void setup(void) 
 {
   // Initialize LED
@@ -128,6 +123,8 @@ char* BLEClientConnected(void)
 
 void ReadUART(void)
 {
+  const uint8_t end[1] = {10};
+  int horizontal_chars = floor(SCREEN_WIDTH/6);                           // each char is about 6 pixels wide
   OLEDDisplayStatus("UART READ MODE");
   SerialBT.write((uint8_t*)"ESP READ MODE INITIATED\n", 24);
   while(SerialBT.connected())
