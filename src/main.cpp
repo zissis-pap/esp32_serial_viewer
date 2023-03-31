@@ -19,7 +19,6 @@ SPIClass sd_spi(HSPI);                                                  // Initi
 SYS_STATUS 		SYSTEM_STATUS = SYSTEM_OK;
 SYS_STATE  		SYSTEM_STATE  = SYSTEM_RESET;
 
-String IncominData = "";
 int horizontal_chars = floor(SCREEN_WIDTH/6);                           // each char is about 6 pixels wide
 int cursor = 0;
 
@@ -54,43 +53,6 @@ void loop(void)
   {
     StateExecution();
   }
-
-  if (Serial.available()) 
-  {
-    digitalWrite(LED_BUILTIN, HIGH); // while OLED is running, must set GPIO25 in high
-    String data = Serial.readStringUntil('\n');
-    int lines = 0;
-    int data_len = data.length();
-    if(data_len % horizontal_chars)
-    {
-      lines = (data_len / horizontal_chars) + 1;
-    }
-    else
-    {
-      lines = data_len / horizontal_chars;
-    }
-    if(lines == 0) lines = 1;
-    
-    if (display.getCursorY() >= SCREEN_HEIGHT - lines*LINE_HEIGHT + 1) 
-    {
-      for (int y = 0; y < SCREEN_HEIGHT; y++) 
-      {
-        for (int x = 0; x < SCREEN_WIDTH; x++) 
-        {
-          display.drawPixel(x, y, display.getPixel(x, y + lines*LINE_HEIGHT));
-        }
-      }
-      display.setCursor(0, SCREEN_HEIGHT - lines*LINE_HEIGHT);
-    }
-    display.setCursor(0, display.getCursorY());
-    display.println(data);
-    display.display();
-
-    SerialBT.write((uint8_t*)data.c_str(), data_len);
-    SerialBT.write(end, 1);
-
-    digitalWrite(LED_BUILTIN, LOW); // while OLED is running, must set GPIO25 in high
-  }
 }
 
 /* MAIN FLOW FUNCTIONS */
@@ -101,7 +63,7 @@ void ErrorHandler(void)
 
 void StateExecution(void)
 {
-  char* sys_control;
+  static char* sys_control;
   switch(SYSTEM_STATE)
   {
     case SYSTEM_RESET:
@@ -111,9 +73,10 @@ void StateExecution(void)
       WaitBLEClientConnection();
       break;
     case BLE_CLIENT_CONNECTED:
-      BLEClientConnected();
+      sys_control = BLEClientConnected();
       break;
     case COMMAND:
+      ExecuteCommand(sys_control);
       break;
     default:
       break;
@@ -139,10 +102,10 @@ char* BLEClientConnected(void)
 {
   char* command;
   static uint8_t greeting_displayed = FALSE;
+  OLEDDisplayStatus("BLE CLIENT CONNECTED");
   if(greeting_displayed == FALSE) 
   {
-    OLEDDisplayStatus("BLE CLIENT CONNECTED");
-    SerialBT.write(bluetooth_greeting, sizeof(bluetooth_greeting)/sizeof(uint8_t));
+    SerialBT.write(bluetooth_greeting, sizeof(bluetooth_greeting)/sizeof(uint8_t) - 1);
     greeting_displayed = TRUE;
   }
   while(SerialBT.connected())
@@ -160,6 +123,52 @@ char* BLEClientConnected(void)
   }
   SYSTEM_STATE = AWAIT_BLE_CLIENT;
   return NULL;
+}
+
+void ReadUART(void)
+{
+  OLEDDisplayStatus("UART READ MODE");
+  SerialBT.write((uint8_t*)"ESP READ MODE INITIATED\n", 24);
+  while(SerialBT.connected())
+  {
+    if (Serial.available()) 
+    {
+      digitalWrite(LED_BUILTIN, HIGH); // while OLED is running, must set GPIO25 in high
+      String data = Serial.readStringUntil('\n');
+      int lines = 0;
+      int data_len = data.length();
+      if(data_len % horizontal_chars)
+      {
+        lines = (data_len / horizontal_chars) + 1;
+      }
+      else
+      {
+        lines = data_len / horizontal_chars;
+      }
+      if(lines == 0) lines = 1;
+      
+      if (display.getCursorY() >= SCREEN_HEIGHT - lines*LINE_HEIGHT + 1) 
+      {
+        for (int y = 0; y < SCREEN_HEIGHT; y++) 
+        {
+          for (int x = 0; x < SCREEN_WIDTH; x++) 
+          {
+            display.drawPixel(x, y, display.getPixel(x, y + lines*LINE_HEIGHT));
+          }
+        }
+        display.setCursor(0, SCREEN_HEIGHT - lines*LINE_HEIGHT);
+      }
+      display.setCursor(0, display.getCursorY());
+      display.println(data);
+      display.display();
+
+      SerialBT.write((uint8_t*)data.c_str(), data_len);
+      SerialBT.write(end, 1);
+
+      digitalWrite(LED_BUILTIN, LOW); // while OLED is running, must set GPIO25 in high
+    }
+  }
+  SYSTEM_STATE = AWAIT_BLE_CLIENT;
 }
 
 /* SETUP FUNCTIONS */
@@ -330,40 +339,56 @@ char* CheckForCommand(void)
   {
     if(strncmp(data, "esp", 3) == 0 && strlen(data) >= 8)
     {
-      if(strncmp(&data[4], "set", 3) == 0)
-      {
-
-      }
+      if(strncmp(&data[4], "set", 3) == 0) {}
       else if(strncmp(&data[4], "exe", 3) == 0)
       {
-        if(strncmp(&data[9], "read", 4) == 0)
+        if(strncmp(&data[8], "read", 4) == 0) 
         {
-
+          data[0] = 48; // should return?
         }
-        else if(strncmp(&data[9], "stop", 4) == 0)
-        {
-
-        }
+        else if(strncmp(&data[9], "stop", 4) == 0) {}
       }
-      else if(strncmp(&data[4], "get", 3) == 0)
-      {
-
-      }
+      else if(strncmp(&data[4], "get", 3) == 0) {}
       else if(strncmp(&data[4], "help", 4) == 0)  // OK
       {
-        SerialBT.write(help_message, sizeof(help_message)/sizeof(uint8_t));
+        SerialBT.write(help_message, sizeof(help_message)/sizeof(uint8_t) - 1);
+        return NULL;
       }
-
+      return data;
     }
   }
   return NULL;
 }
 
+void ExecuteCommand(char* command)
+{
+  uint8_t command_id;
+  if(command != NULL) 
+  {
+    command_id = command[0];
+    switch(command_id)
+    {
+      case READ_UART:
+        ReadUART();
+        break;
+      default:
+        Serial.println("Default");
+        break;
+    }
+  }
+  if(SerialBT.connected())
+  {
+    SYSTEM_STATE = BLE_CLIENT_CONNECTED;
+  }
+  else
+  {
+    SYSTEM_STATE = AWAIT_BLE_CLIENT;
+  }
+}
+
 /* OLED functions */
 void OLEDDisplayStatus(String data)
 {
-  int  temp_cursorX = display.getCursorX();
-  int  temp_cursorY = display.getCursorY();
   for(uint16_t i = 0; i < SCREEN_WIDTH; i++)
   {
     for(uint8_t k = 0; k < LINE_HEIGHT; k++)
@@ -374,7 +399,7 @@ void OLEDDisplayStatus(String data)
   }
   display.setCursor(0, 0);
   display.print(data);
-  display.setCursor(temp_cursorX, temp_cursorY);
+  display.setCursor(0, 2*LINE_HEIGHT);
   display.display();
 }
 

@@ -22,12 +22,14 @@ void StateExecution(void);
 void SystemPowerUp(void);
 void WaitBLEClientConnection(void);
 char* BLEClientConnected(void);
+void ReadUART(void);
 
 // Bluetooth functions
 char* BluetoothReceive(void);
 
 // Command functions
 char* CheckForCommand(void);
+void ExecuteCommand(char* command);
 
 // Error functions
 void PrintSystemStatus(void);
