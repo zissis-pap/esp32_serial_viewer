@@ -47,6 +47,7 @@ void SDSetup(void);
 
 // OLED functions
 void OLEDDisplayStatus(String data);
+void OLEDScrollTextUp(const char* data);
 
 // SD functions
 void SDListDir(void);

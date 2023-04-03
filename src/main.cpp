@@ -47,6 +47,7 @@ void loop(void)
 {
   while(1)
   {
+    ErrorHandler();
     StateExecution();
   }
 }
@@ -54,7 +55,10 @@ void loop(void)
 /* MAIN FLOW FUNCTIONS */
 void ErrorHandler(void)
 {
+  while(SYSTEM_STATUS != SYSTEM_OK)
+  {
 
+  }
 }
 
 void StateExecution(void)
@@ -124,7 +128,6 @@ char* BLEClientConnected(void)
 void ReadUART(void)
 {
   const uint8_t end[1] = {10};
-  int horizontal_chars = floor(SCREEN_WIDTH/6);                           // each char is about 6 pixels wide
   OLEDDisplayStatus("UART READ MODE");
   SerialBT.write((uint8_t*)"ESP READ MODE INITIATED\n", 24);
   while(SerialBT.connected())
@@ -133,33 +136,8 @@ void ReadUART(void)
     {
       digitalWrite(LED_BUILTIN, HIGH); // while OLED is running, must set GPIO25 in high
       String data = Serial.readStringUntil('\n');
-      int lines = 0;
       int data_len = data.length();
-      if(data_len % horizontal_chars)
-      {
-        lines = (data_len / horizontal_chars) + 1;
-      }
-      else
-      {
-        lines = data_len / horizontal_chars;
-      }
-      if(lines == 0) lines = 1;
-      
-      if (display.getCursorY() >= SCREEN_HEIGHT - lines*LINE_HEIGHT + 1) 
-      {
-        for (int y = 0; y < SCREEN_HEIGHT; y++) 
-        {
-          for (int x = 0; x < SCREEN_WIDTH; x++) 
-          {
-            display.drawPixel(x, y, display.getPixel(x, y + lines*LINE_HEIGHT));
-          }
-        }
-        display.setCursor(0, SCREEN_HEIGHT - lines*LINE_HEIGHT);
-      }
-      display.setCursor(0, display.getCursorY());
-      display.println(data);
-      display.display();
-
+      OLEDScrollTextUp(data.c_str());
       SerialBT.write((uint8_t*)data.c_str(), data_len);
       SerialBT.write(end, 1);
 
@@ -399,6 +377,37 @@ void OLEDDisplayStatus(String data)
   display.setCursor(0, 0);
   display.print(data);
   display.setCursor(0, 2*LINE_HEIGHT);
+  display.display();
+}
+
+void OLEDScrollTextUp(const char* data)
+{
+  int horizontal_chars = floor(SCREEN_WIDTH/6);                           // each char is about 6 pixels wide
+  int lines = 0;
+  int data_len = strlen(data);
+  if(data_len % horizontal_chars)
+  {
+    lines = (data_len / horizontal_chars) + 1;
+  }
+  else
+  {
+    lines = data_len / horizontal_chars;
+  }
+  if(lines == 0) lines = 1;
+      
+  if (display.getCursorY() >= SCREEN_HEIGHT - lines*LINE_HEIGHT + 1) 
+  {
+    for (int y = 0; y < SCREEN_HEIGHT; y++) 
+    {
+      for (int x = 0; x < SCREEN_WIDTH; x++) 
+      {
+        display.drawPixel(x, y, display.getPixel(x, y + lines*LINE_HEIGHT));
+      }
+    }
+    display.setCursor(0, SCREEN_HEIGHT - lines*LINE_HEIGHT);
+  }
+  display.setCursor(0, display.getCursorY());
+  display.println(data);
   display.display();
 }
 
