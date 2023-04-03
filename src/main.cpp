@@ -411,29 +411,46 @@ void SDListDir(void)
 
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels)
 {
-  char buffer[256] = "";
+  char buffer[2048] = "";
   sprintf(buffer, "Listing directory: %s\n", dirname);
   Serial.printf("Listing directory: %s\n", dirname);
 
   File root = fs.open(dirname);
-  if(!root){
+  if(!root)
+  {
     Serial.println("Failed to open directory");
     return;
   }
-  if(!root.isDirectory()){
+  if(!root.isDirectory())
+  {
     Serial.println("Not a directory");
     return;
   }
 
   File file = root.openNextFile();
-  while(file){
-    if(file.isDirectory()){
+  while(file)
+  {
+    if(file.isDirectory())
+    {
+      strcat(buffer, "  DIR : ");
+      strcat(buffer, file.name());
+      strcat(buffer, "\n");
+
       Serial.print("  DIR : ");
       Serial.println(file.name());
-      if(levels){
+      if(levels)
+      {
         listDir(fs, file.name(), levels -1);
       }
-    } else {
+    } 
+    else 
+    {
+      strcat(buffer, "  FILE: ");
+      strcat(buffer, file.name());
+      strcat(buffer, "  SIZE: ");
+      strcat(buffer, (char*)file.size());
+      strcat(buffer, "\n");
+
       Serial.print("  FILE: ");
       Serial.print(file.name());
       Serial.print("  SIZE: ");
