@@ -2,6 +2,7 @@
 #include <SPI.h>
 #include <LoRa.h>
 #include <Wire.h> 
+#include <WiFi.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <BluetoothSerial.h>
@@ -16,6 +17,7 @@
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RST); // Initialize SSD1306 display
 BluetoothSerial SerialBT;                                               // Initialize bluetooth
 SPIClass sd_spi(HSPI);                                                  // Initialize SPI for SD card
+WiFiServer server(80);                                                  // Initialize web server to port 80
 
 SYS_STATUS 		SYSTEM_STATUS = SYSTEM_OK;
 SYS_STATE  		SYSTEM_STATE  = SYSTEM_RESET;
@@ -28,6 +30,8 @@ void setup(void)
   SerialSetUp();
   // Initialize OLED
   OLEDSetUp(); 
+  // Initialize WiFi
+  WiFiSetup();
   // Initialize LoRa
   LoRaSetUp(); 
   // Initialize SD Card
@@ -155,6 +159,24 @@ void SerialSetUp(void)
   Serial.println(firmware_version);
 }
 
+void WiFiSetup(void)
+{
+  const char* ssid     = "ESP32-Serial-Viewer";
+  const char* password = "123456789";
+  if(WiFi.softAP(ssid, password))
+  {
+    IPAddress IP = WiFi.softAPIP();
+    Serial.print("AP IP address: ");
+    Serial.println(IP);
+    server.begin();
+    display_ok();
+  }
+  else
+  {
+    display_fail();
+  }
+}
+
 void OLEDSetUp(void)
 {
   Wire.begin(OLED_SDA, OLED_SCL); // Initialize OLED
@@ -220,6 +242,23 @@ void SDSetup(void)
     ClearErrorID(SD_CARD_ERROR);
     display_ok();
   }
+}
+
+/* WIFI FUNCTIONS */
+void HTTPClient(void)
+{
+  WiFiClient client = server.available();   // Listen for incoming clients
+  if(client)
+  {
+    while(client.connected())
+    {
+      if(client.available())
+      {
+        
+      }
+    }
+  }
+
 }
 
 /* BLUETOOTH FUNCTIONS */

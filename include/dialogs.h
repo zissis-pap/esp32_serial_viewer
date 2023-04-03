@@ -1,6 +1,6 @@
 const uint8_t bluetooth_greeting[] ="\
 WELCOME TO ESP SERIAL VIEWER\n\
-Software version: 0.15.4\n------------------------------------------------------------\n\n\
+Software version: 0.16.0\n------------------------------------------------------------\n\n\
 Enter 'esp help' to see all available options";
 
 const uint8_t help_message[] = "\

@@ -19,9 +19,9 @@
 #define LINE_HEIGHT   8   // each line is 8 pixels high
 
 /* SD Card Parameters */
-#define SD_CS 13
-#define SD_SCK 14
-#define SD_MOSI 15
-#define SD_MISO 2
+#define SD_CS         13
+#define SD_SCK        14
+#define SD_MOSI       15
+#define SD_MISO       2
 
 #endif

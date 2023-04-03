@@ -24,6 +24,9 @@ void WaitBLEClientConnection(void);
 char* BLEClientConnected(void);
 void ReadUART(void);
 
+// WiFi functions
+void HTTPClient(void);
+
 // Bluetooth functions
 char* BluetoothReceive(void);
 
@@ -40,6 +43,7 @@ void ClearErrorID(uint16_t error);
 
 // System setup
 void SerialSetUp(void);
+void WiFiSetup(void);
 void OLEDSetUp(void);
 void BluetoothSetUP(void);
 void LoRaSetUp(void);
