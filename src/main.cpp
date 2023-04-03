@@ -406,14 +406,14 @@ void OLEDDisplayStatus(String data)
 void SDListDir(void)
 {
   listDir(SD, "/", 0);
-
 }
 
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels)
 {
   char buffer[2048] = "";
-  sprintf(buffer, "Listing directory: %s\n", dirname);
-  Serial.printf("Listing directory: %s\n", dirname);
+  char data[32] = "";
+  sprintf(buffer, "\nListing directory: %s\n", dirname);
+  SerialBT.write((uint8_t*)buffer, strlen(buffer) - 1);
 
   File root = fs.open(dirname);
   if(!root)
@@ -426,18 +426,16 @@ void listDir(fs::FS &fs, const char * dirname, uint8_t levels)
     Serial.println("Not a directory");
     return;
   }
-
+  
   File file = root.openNextFile();
   while(file)
   {
     if(file.isDirectory())
     {
-      strcat(buffer, "  DIR : ");
+      strcpy(buffer, "\n  DIR : ");
       strcat(buffer, file.name());
       strcat(buffer, "\n");
 
-      Serial.print("  DIR : ");
-      Serial.println(file.name());
       if(levels)
       {
         listDir(fs, file.name(), levels -1);
@@ -448,17 +446,13 @@ void listDir(fs::FS &fs, const char * dirname, uint8_t levels)
       strcat(buffer, "  FILE: ");
       strcat(buffer, file.name());
       strcat(buffer, "  SIZE: ");
-      strcat(buffer, (char*)file.size());
+      sprintf(data, "%d", file.size());
+      strcat(buffer, data);
       strcat(buffer, "\n");
-
-      Serial.print("  FILE: ");
-      Serial.print(file.name());
-      Serial.print("  SIZE: ");
-      Serial.println(file.size());
     }
     file = root.openNextFile();
   }
-  SerialBT.write((uint8_t*)buffer, sizeof(buffer)/sizeof(char) - 1);
+  SerialBT.write((uint8_t*)buffer, strlen(buffer) - 1);
 }
 
 /* MISC FUNCTIONS */
