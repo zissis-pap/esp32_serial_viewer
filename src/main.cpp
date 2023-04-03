@@ -254,7 +254,7 @@ void HTTPClient(void)
     {
       if(client.available())
       {
-        
+
       }
     }
   }
@@ -289,9 +289,9 @@ char* BluetoothReceive(void)
   */
 void PrintSystemStatus(void)
 {
-	char data[32] = "";
-	sprintf(data, "ERROR STATUS: %d", SYSTEM_STATUS);
-	Serial.println(data);
+  char data[32] = "";
+  sprintf(data, "ERROR STATUS: %d", SYSTEM_STATUS);
+  Serial.println(data);
   display.println(data);
   display.display();
 }
@@ -302,14 +302,14 @@ void PrintSystemStatus(void)
   */
 uint16_t CheckSystemError(void)
 {
-	for(uint8_t i = 0; i < 16; i++)
-	{
-		if(SYSTEM_STATUS&(1<<i))
-		{
-			return(1 << i);
-		}
-	}
-	return 0;
+  for(uint8_t i = 0; i < 16; i++)
+  {
+    if(SYSTEM_STATUS&(1<<i))
+    {
+      return(1 << i);
+      }
+  }
+  return 0;
 }
 
 /**
@@ -318,14 +318,14 @@ uint16_t CheckSystemError(void)
   */
 uint8_t CheckErrorID(uint16_t error)
 {
-	if((SYSTEM_STATUS&error) == error)
-	{
-		return TRUE;
-	}
-	else
-	{
-		return FALSE;
-	}
+  if((SYSTEM_STATUS&error) == error)
+  {
+    return TRUE;
+  }
+  else
+  {
+    return FALSE;
+  }
 }
 
 /**
@@ -334,7 +334,7 @@ uint8_t CheckErrorID(uint16_t error)
   */
 void SetErrorID(uint16_t error)
 {
-	SYSTEM_STATUS = SYSTEM_STATUS | error;
+  SYSTEM_STATUS = SYSTEM_STATUS | error;
 }
 
 /**
@@ -343,7 +343,7 @@ void SetErrorID(uint16_t error)
   */
 void ClearErrorID(uint16_t error)
 {
-	SYSTEM_STATUS &= ~error;
+  SYSTEM_STATUS &= ~error;
 }
 
 /* COMMAND FUNCTIONS */
@@ -357,8 +357,9 @@ char* CheckForCommand(void)
       if(strncmp(&data[4], "set", 3) == 0) {}
       else if(strncmp(&data[4], "exe", 3) == 0)
       {
-        if(strncmp(&data[8], "read", 4) == 0) data[0] = READ_UART; 
-        if(strncmp(&data[8], "list", 4) == 0) data[0] = LIST_SD; 
+        if     (strncmp(&data[8], "read", 4) == 0) data[0] = READ_UART; 
+        else if(strncmp(&data[8], "list", 4) == 0) data[0] = LIST_SD; 
+        else if(strncmp(&data[8], "open", 4) == 0) data[0] = OPEN_FILE;
         else if(strncmp(&data[9], "stop", 4) == 0) {}
       }
       else if(strncmp(&data[4], "get", 3) == 0) {}
@@ -386,6 +387,9 @@ void ExecuteCommand(char* command)
         break;
       case LIST_SD:
         SDListDir();
+        break;
+      case OPEN_FILE:
+        SDOpenFile(command);
         break;
       default:
         Serial.println("Default");
@@ -456,6 +460,11 @@ void SDListDir(void)
   listDir(SD, "/", 0);
 }
 
+void SDOpenFile(const char* file_name)
+{
+
+}
+
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels)
 {
   char buffer[2048] = "";
@@ -501,6 +510,25 @@ void listDir(fs::FS &fs, const char * dirname, uint8_t levels)
     file = root.openNextFile();
   }
   SerialBT.write((uint8_t*)buffer, strlen(buffer) - 1);
+}
+
+void readFile(fs::FS &fs, const char * path)
+{
+  Serial.printf("Reading file: %s\n", path);
+
+  File file = fs.open(path);
+  if(!file)
+  {
+    Serial.println("Failed to open file for reading");
+    return;
+  }
+
+  Serial.print("Read from file: ");
+  while(file.available())
+  {
+    Serial.write(file.read());
+  }
+  file.close();
 }
 
 /* MISC FUNCTIONS */

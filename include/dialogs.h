@@ -1,13 +1,14 @@
 const uint8_t bluetooth_greeting[] ="\
 WELCOME TO ESP SERIAL VIEWER\n\
-Software version: 0.16.0\n------------------------------------------------------------\n\n\
+Software version: 0.16.1\n------------------------------------------------------------\n\n\
 Enter 'esp help' to see all available options";
 
 const uint8_t help_message[] = "\
 ESP SERIAL VIEWER MANUAL\n\n\
 ------ ESP EXE COMMANDS ------\n\n\
 * esp exe read: enables reading the uart\n\
-* esp exe list: lists the contents of the SD\n\n\
+* esp exe list: lists the contents of the SD\n\
+* esp exe open <file>: opens the specified .txt file\n\n\
 ------ ESP SET COMMANDS ------\n\n\
 * esp set baud x: sets uart baud rate to x option\n\
         1: 115200,  8bits, 1 stop bit, no parity\n\
