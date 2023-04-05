@@ -355,21 +355,22 @@ char* CheckForCommand(void)
   {
     if(strncmp(data, "esp", 3) == 0 && strlen(data) >= 8)
     {
-      if(strncmp(&data[4], "set", 3) == 0) {}
-      else if(strncmp(&data[4], "exe", 3) == 0)
+      if      (strncmp(&data[4], "set", 3) == 0) 
       {
-        if     (strncmp(&data[8], "read", 4) == 0) data[0] = READ_UART; 
-        else if(strncmp(&data[8], "list", 4) == 0) data[0] = LIST_SD; 
-        else if(strncmp(&data[8], "open", 4) == 0) data[0] = OPEN_FILE;
-        else if(strncmp(&data[9], "stop", 4) == 0) {}
+        if(strncmp(&data[8], "baud", 4) == 0)     data[0] = SET_BAUD_RATE;
       }
-      else if(strncmp(&data[4], "get", 3) == 0) {}
-      else if(strncmp(&data[4], "help", 4) == 0)  // OK
+      else if (strncmp(&data[4], "read", 4) == 0) data[0] = READ_UART;
+      else if (strncmp(&data[4], "stop", 4) == 0) data[0] = STOP_READ; 
+      else if (strncmp(&data[4], "list", 4) == 0) data[0] = LIST_SD;
+      else if (strncmp(&data[4], "save", 4) == 0) data[0] = SAVE_TO_SD;
+      else if (strncmp(&data[4], "open", 4) == 0) data[0] = OPEN_FILE;
+      else if (strncmp(&data[4], "help", 4) == 0)  // OK
       {
         SerialBT.write(help_message, sizeof(help_message)/sizeof(uint8_t) - 1);
         return NULL;
       }
-      return data;
+      else return NULL;
+    return data;
     }
   }
   return NULL;
@@ -386,11 +387,17 @@ void ExecuteCommand(char* command)
       case READ_UART:
         ReadUART();
         break;
+      case STOP_READ:
+        break;
       case LIST_SD:
         SDListDir();
         break;
+      case SAVE_TO_SD:
+        break;
       case OPEN_FILE:
         SDOpenFile(command);
+        break;
+      case SET_BAUD_RATE:
         break;
       default:
         Serial.println("Default");
@@ -465,9 +472,9 @@ void SDOpenFile(const char* file_name)
 {
   char buffer[64] = "";
   uint8_t i = 0;
-  while(file_name[13+i] != 10)
+  while(file_name[9+i] != 10)
   {
-    buffer[i] = file_name[13+i];
+    buffer[i] = file_name[9+i];
     i++;
   }
   readFile(SD, buffer);
