@@ -272,7 +272,8 @@ char* BluetoothReceive(void)
     c = SerialBT.read();
     if(c == '\n')
     {
-      buffer[index] = '\0';
+      buffer[index]     = 10;
+      buffer[index + 1] = '\0';
       return buffer;
     }
     buffer[index] = c;
@@ -462,7 +463,14 @@ void SDListDir(void)
 
 void SDOpenFile(const char* file_name)
 {
-
+  char buffer[64] = "";
+  uint8_t i = 0;
+  while(file_name[13+i] != 10)
+  {
+    buffer[i] = file_name[13+i];
+    i++;
+  }
+  readFile(SD, buffer);
 }
 
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels)
@@ -514,19 +522,21 @@ void listDir(fs::FS &fs, const char * dirname, uint8_t levels)
 
 void readFile(fs::FS &fs, const char * path)
 {
-  Serial.printf("Reading file: %s\n", path);
-
+  char data[64] = "";
+  uint8_t buff[2];
+  uint8_t i = 0;
+  sprintf(data, "Reading file: %s\n", path);
+  SerialBT.write((uint8_t*)data, strlen(data));
   File file = fs.open(path);
   if(!file)
   {
     Serial.println("Failed to open file for reading");
     return;
   }
-
-  Serial.print("Read from file: ");
   while(file.available())
   {
-    Serial.write(file.read());
+    buff[0] = file.read();
+    SerialBT.write(buff, 1);
   }
   file.close();
 }

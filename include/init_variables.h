@@ -9,7 +9,7 @@
 #ifndef __INIT_VARIABLES_H
 #define __INIT_VARIABLES_H
 
-const char firmware_version[] = "V0.16.1 - 03-Apr-2023";
+const char firmware_version[] = "V0.16.2 - 05-Apr-2023";
 const char bluetooth_name[] = "ESP32 Portable UART Reader";
 
 #endif
