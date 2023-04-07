@@ -36,7 +36,7 @@ void ExecuteCommand(char* command);
 
 // Error functions
 void PrintSystemStatus(void);
-uint16_t CheckSystemError(void);
+uint16_t CheckSystemError(uint8_t index);
 uint8_t CheckErrorID(uint16_t error);
 void SetErrorID(uint16_t error);
 void ClearErrorID(uint16_t error);

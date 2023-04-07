@@ -59,9 +59,19 @@ void loop(void)
 /* MAIN FLOW FUNCTIONS */
 void ErrorHandler(void)
 {
-  while(SYSTEM_STATUS != SYSTEM_OK)
+  uint8_t error_index = 0;
+  while(error_index < 16) // Check for all possible errors and handle them
   {
-
+    switch(CheckSystemError(error_index))
+    {
+      case SYSTEM_OK:
+        break;
+      case SD_CARD_ERROR:
+        break;
+      default:
+        break;
+    }
+    error_index++;
   }
 }
 
@@ -131,12 +141,13 @@ char* BLEClientConnected(void)
 
 void ReadUART(void)
 {
+  char * command;
   const uint8_t end[1] = {10};
   OLEDDisplayStatus("UART READ MODE");
   SerialBT.write((uint8_t*)"ESP READ MODE INITIATED\n", 24);
   while(SerialBT.connected())
   {
-    if (Serial.available()) 
+    if(Serial.available()) 
     {
       digitalWrite(LED_BUILTIN, HIGH); // while OLED is running, must set GPIO25 in high
       String data = Serial.readStringUntil('\n');
@@ -144,8 +155,17 @@ void ReadUART(void)
       OLEDScrollTextUp(data.c_str());
       SerialBT.write((uint8_t*)data.c_str(), data_len);
       SerialBT.write(end, 1);
-
       digitalWrite(LED_BUILTIN, LOW); // while OLED is running, must set GPIO25 in high
+    }
+    command = CheckForCommand();
+    if(command != NULL)
+    {
+      if(command[0] == STOP_READ)
+      {
+        SerialBT.write((uint8_t*)"ESP EXIT READ MODE\n", 19);
+        SYSTEM_STATE = BLE_CLIENT_CONNECTED;
+        return;
+      }
     }
   }
   SYSTEM_STATE = AWAIT_BLE_CLIENT;
@@ -301,14 +321,11 @@ void PrintSystemStatus(void)
   * @brief  Reads the SYSTEM_STATUS variable
   * @retval the error ID
   */
-uint16_t CheckSystemError(void)
+uint16_t CheckSystemError(uint8_t index)
 {
-  for(uint8_t i = 0; i < 16; i++)
+  if(SYSTEM_STATUS&(1<<index))
   {
-    if(SYSTEM_STATUS&(1<<i))
-    {
-      return(1 << i);
-      }
+    return(1 << index);
   }
   return 0;
 }
@@ -465,19 +482,36 @@ void OLEDScrollTextUp(const char* data)
 /* SD functions */
 void SDListDir(void)
 {
-  listDir(SD, "/", 0);
+  
+  if(CheckErrorID(SD_CARD_ERROR))
+  {
+    char buffer[32] = "SD card is not inserted\n";
+    SerialBT.write((uint8_t*)buffer, strlen(buffer));
+  }
+  else
+  {
+    listDir(SD, "/", 0);
+  }
 }
 
 void SDOpenFile(const char* file_name)
 {
   char buffer[64] = "";
   uint8_t i = 0;
-  while(file_name[9+i] != 10)
+  if(CheckErrorID(SD_CARD_ERROR))
   {
-    buffer[i] = file_name[9+i];
-    i++;
+    strcat(buffer, "SD card is not inserted\n");
+    SerialBT.write((uint8_t*)buffer, strlen(buffer));
   }
-  readFile(SD, buffer);
+  else
+  {
+    while(file_name[9+i] != 10)
+    {
+      buffer[i] = file_name[9+i];
+      i++;
+    }
+    readFile(SD, buffer);
+  }
 }
 
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels)
