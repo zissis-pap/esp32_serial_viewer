@@ -22,7 +22,7 @@ void StateExecution(void);
 void SystemPowerUp(void);
 void WaitBLEClientConnection(void);
 char* BLEClientConnected(void);
-void ReadUART(void);
+void ReadUART(boolean save, char * command);
 
 // WiFi functions
 void HTTPClient(void);
@@ -58,6 +58,8 @@ void SDListDir(void);
 void SDOpenFile(const char* file_name);
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels);
 void readFile(fs::FS &fs, const char * path);
+void appendFile(fs::FS &fs, const char * path, const char * message);
+void SDPrintNoCardError(void);
 
 // Misc
 void display_ok(void);

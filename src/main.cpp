@@ -139,23 +139,44 @@ char* BLEClientConnected(void)
   return NULL;
 }
 
-void ReadUART(void)
+void ReadUART(boolean save, char * command)
 {
-  char * command;
+  int data_len;
+  char name[32] = "";
   const uint8_t end[1] = {10};
   OLEDDisplayStatus("UART READ MODE");
-  SerialBT.write((uint8_t*)"ESP READ MODE INITIATED\n", 24);
+  if(save == false)
+  {
+    SerialBT.write((uint8_t*)"ESP READ MODE INITIATED\n", 24);
+  }
+  else
+  {
+    if(CheckErrorID(SD_CARD_ERROR))
+    {
+      SDPrintNoCardError();
+      return;
+    }
+    else
+    {
+      SerialBT.write((uint8_t*)"ESP LOG MODE INITIATED\n", 23);
+      strcpy(name, &command[9]);
+    }
+  }
   while(SerialBT.connected())
   {
     if(Serial.available()) 
     {
       digitalWrite(LED_BUILTIN, HIGH); // while OLED is running, must set GPIO25 in high
       String data = Serial.readStringUntil('\n');
-      int data_len = data.length();
+      data_len = data.length();
       OLEDScrollTextUp(data.c_str());
       SerialBT.write((uint8_t*)data.c_str(), data_len);
       SerialBT.write(end, 1);
       digitalWrite(LED_BUILTIN, LOW); // while OLED is running, must set GPIO25 in high
+      if(save)
+      {
+        appendFile(SD, name, data.c_str());
+      }
     }
     command = CheckForCommand();
     if(command != NULL)
@@ -402,14 +423,13 @@ void ExecuteCommand(char* command)
     switch(command_id)
     {
       case READ_UART:
-        ReadUART();
-        break;
-      case STOP_READ:
+        ReadUART(false, NULL);
         break;
       case LIST_SD:
         SDListDir();
         break;
       case SAVE_TO_SD:
+        ReadUART(true, command);
         break;
       case OPEN_FILE:
         SDOpenFile(command);
@@ -482,11 +502,9 @@ void OLEDScrollTextUp(const char* data)
 /* SD functions */
 void SDListDir(void)
 {
-  
   if(CheckErrorID(SD_CARD_ERROR))
   {
-    char buffer[32] = "SD card is not inserted\n";
-    SerialBT.write((uint8_t*)buffer, strlen(buffer));
+    SDPrintNoCardError();
   }
   else
   {
@@ -500,8 +518,7 @@ void SDOpenFile(const char* file_name)
   uint8_t i = 0;
   if(CheckErrorID(SD_CARD_ERROR))
   {
-    strcat(buffer, "SD card is not inserted\n");
-    SerialBT.write((uint8_t*)buffer, strlen(buffer));
+    SDPrintNoCardError();
   }
   else
   {
@@ -580,6 +597,35 @@ void readFile(fs::FS &fs, const char * path)
     SerialBT.write(buff, 1);
   }
   file.close();
+}
+
+void appendFile(fs::FS &fs, const char * path, const char * message)
+{
+  Serial.printf("Appending to file: %s\n", path);
+
+  File file = fs.open(path, FILE_APPEND);
+  if(!file)
+  {
+    Serial.println("Failed to open file for appending");
+    return;
+  }
+  if(file.print(message))
+  {
+    Serial.println("Message appended");
+    file.print("\n"); // Add new line character to the end of each line
+  } 
+  else 
+  {
+    Serial.println("Append failed");
+  }
+  file.close();
+}
+
+void SDPrintNoCardError(void)
+{
+  char buffer[32];
+  strcat(buffer, "SD card is not inserted\n");
+  SerialBT.write((uint8_t*)buffer, strlen(buffer));
 }
 
 /* MISC FUNCTIONS */
