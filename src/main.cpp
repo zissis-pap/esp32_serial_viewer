@@ -402,6 +402,7 @@ char* CheckForCommand(void)
       else if (strncmp(&data[4], "list", 4) == 0) data[0] = LIST_SD;
       else if (strncmp(&data[4], "save", 4) == 0) data[0] = SAVE_TO_SD;
       else if (strncmp(&data[4], "open", 4) == 0) data[0] = OPEN_FILE;
+      else if (strncmp(&data[4], "delt", 4) == 0) data[0] = DELETE_FILE;
       else if (strncmp(&data[4], "help", 4) == 0)  // OK
       {
         SerialBT.write(help_message, sizeof(help_message)/sizeof(uint8_t) - 1);
@@ -433,6 +434,9 @@ void ExecuteCommand(char* command)
         break;
       case OPEN_FILE:
         SDOpenFile(command);
+        break;
+      case DELETE_FILE:
+        SDDeleteFile(command);
         break;
       case SET_BAUD_RATE:
         break;
@@ -531,6 +535,26 @@ void SDOpenFile(const char* file_name)
   }
 }
 
+void SDDeleteFile(const char* file_name)
+{
+  char buffer[64] = "";
+  uint8_t i = 0;
+  if(CheckErrorID(SD_CARD_ERROR))
+  {
+    SDPrintNoCardError();
+  }
+  else
+  {
+    while(file_name[9+i] != 10)
+    {
+      buffer[i] = file_name[9+i];
+      i++;
+    }
+    deleteFile(SD, buffer);
+  }
+
+}
+
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels)
 {
   char buffer[2048] = "";
@@ -619,6 +643,19 @@ void appendFile(fs::FS &fs, const char * path, const char * message)
     Serial.println("Append failed");
   }
   file.close();
+}
+
+void deleteFile(fs::FS &fs, const char * path)
+{
+  Serial.printf("Deleting file: %s\n", path);
+  if(fs.remove(path))
+  {
+    Serial.println("File deleted");
+  } 
+  else 
+  {
+    Serial.println("Delete failed");
+  }
 }
 
 void SDPrintNoCardError(void)

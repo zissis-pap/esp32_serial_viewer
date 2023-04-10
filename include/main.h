@@ -56,9 +56,11 @@ void OLEDScrollTextUp(const char* data);
 // SD functions
 void SDListDir(void);
 void SDOpenFile(const char* file_name);
+void SDDeleteFile(const char* file_name);
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels);
 void readFile(fs::FS &fs, const char * path);
 void appendFile(fs::FS &fs, const char * path, const char * message);
+void deleteFile(fs::FS &fs, const char * path);
 void SDPrintNoCardError(void);
 
 // Misc
